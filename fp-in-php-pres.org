@@ -1,0 +1,74 @@
+#+TITLE: FP in PHP
+#+OPTIONS: toc:1
+#+REVEAL_ROOT: file:///home/tim/workspace/javascript/reveal.js
+
+* Null: Worst Language Feature Ever
+
+** The Faces of Null
+*** Java: java.lang.NullPointerException
+*** Javascript: “undefined is not a function.” or "Cannot read property 'x' of null."
+*** Ruby: undefined method '...' for nil:NilClass
+*** C/C++: segmentation fault
+
+** Hoare's billion dollar mistake
+*** "I call it my billion-dollar mistake. It was the invention of the null reference in 1965."
+
+
+** You don't actually need the concept of null
+*** Some languages don't even have it:
+**** Haskell
+**** Rust
+**** ML-family languages
+**** Flow?
+**** Other languages?
+
+
+** So why do languages have it?
+It's almost always used to represent the lack of a value.
+
+** Leads to "The Pyramid of Doom"
+
+
+
+* An Alternative? Maybe
+
+** Solution 1: Pretend it doesn't exist ([[http://c2.com/cgi/wiki?NoNullBeyondMethodScope(((())))][Discussed here]])
+*** Never return null. Never accept null as parameter.
+
+** Solution 2: Use the [[https://en.wikipedia.org/wiki/Null_Object_pattern][Null Object pattern]]
+*** Create a type that you can return instead of null that has some neutral behavior.
+*** Not often applicable.
+
+** Solution 3: Use an Option/Maybe type
+*** Haskell has Maybe
+*** Java 8 has Optional
+*** Scala has had Option
+*** C++ has an optional template class in a proposed extension
+*** Swift has Optional
+
+** An Example
+Suppose you have a software model of a computer system and you want to get the firmware version of the USB controller for the computer's soundcard. You might have code that looks like this:
+#+BEGIN_SRC php
+$version = $computer->getSoundcard()->getUSB()->getVersion();
+#+END_SRC
+
+But not all computers have sound cards
+
+#+BEGIN_SRC php
+$version = "UNKNOWN";
+if ($computer != null){
+  $soundcard = $computer->getSoundcard();
+  if($soundcard != null){
+    $usb = $soundcard->getUSB();
+    if($usb != null){
+      $version = $usb->getVersion();
+    }
+  }
+}
+#+END_SRC
+
+
+* The Problem with Exceptions
+
+
+* Either Left or Right
