@@ -13,7 +13,6 @@
 ** Hoare's billion dollar mistake
 *** "I call it my billion-dollar mistake. It was the invention of the null reference in 1965."
 
-
 ** You don't actually need the concept of null
 *** Some languages don't even have it:
 **** Haskell
@@ -22,11 +21,9 @@
 **** Flow?
 **** Other languages?
 
-
 ** So why do languages have it?
-It's almost always used to represent the lack of a value.
-
-** Leads to "The Pyramid of Doom"
+*** It's almost always used to represent the lack of a value.
+*** Sometimes you need to declare a variable before you can assign it a value.
 
 
 
@@ -46,26 +43,101 @@ It's almost always used to represent the lack of a value.
 *** C++ has an optional template class in a proposed extension
 *** Swift has Optional
 
+** What is Option/Maybe?
+*** It's a type with two possible values: Nothing and Just (or None and Some)
+*** Nothing represents no value
+*** Just contains a value
+
+** Class Hierarchy
+(show image of class hierarchy)
+
 ** An Example
-Suppose you have a software model of a computer system and you want to get the firmware version of the USB controller for the computer's soundcard. You might have code that looks like this:
+Suppose you have a software model of a computer system and you want to get the firmware version of the USB controller for the computer's soundcard. You'd like to write code that looks like this:
 #+BEGIN_SRC php
 $version = $computer->getSoundcard()->getUSB()->getVersion();
 #+END_SRC
 
-But not all computers have sound cards
+** An Example, Continued
+But not all computers have sound cards and not all soundcards have a USB controller and their absence is represented by returning null, so you'd have to write
 
 #+BEGIN_SRC php
 $version = "UNKNOWN";
-if ($computer != null){
-  $soundcard = $computer->getSoundcard();
-  if($soundcard != null){
-    $usb = $soundcard->getUSB();
-    if($usb != null){
+$soundcard = $computer->getSoundcard();
+if ($soundcard != null) {
+   $usb = $soundcard->getUSB();
+   if ($usb != null) {
       $version = $usb->getVersion();
-    }
-  }
+   }
 }
 #+END_SRC
+
+And now you're in "The Pyramid of Doom"!
+
+** An Example, using Maybe, First Attempt
+Here we change the return type of getSoundcard() to be Maybe
+
+#+BEGIN_SRC php
+$version = "UNKNOWN";
+$maybeSoundcard = $computer->getSoundcard();
+if (!$maybeSoundcard->isNothing()) {
+   $soundcard = $maybeSoundcard->get();
+   $maybeUSB = $soundcard->getUSB();
+   if (!$maybeUSB->isNothing()) {
+      $usb = $maybeUSB->get();
+      $version = $usb->getVersion();
+   }
+}
+#+END_SRC
+
+But this is worse than before!
+
+** An Example, using Maybe, Second Attempt
+Use `map` and `flatMap` instead:
+
+#+BEGIN_SRC php
+$version = "UNKNOWN";
+$maybeSoundcard = $computer->getSoundcard();
+$maybeUSB = $maybeSoundcard->flatMap(function ($soundcard) {
+   return $soundcard->getUSB();
+});
+$maybeVersion = $maybeUSB->map(function ($usb) {
+   return $usb->getVersion();
+});
+if (!$maybeVersion->isNothing()) {
+   $version = $maybeVersion->get();
+}
+#+END_SRC
+
+** An Example, using Maybe, Second Attempt, cleaned up
+#+BEGIN_SRC php
+$maybeSoundcard = $computer->getSoundcard();
+$maybeUSB = $maybeSoundcard->flatMap(function ($soundcard) {
+   return $soundcard->getUSB();
+});
+$maybeVersion = $maybeUSB->map(function ($usb) {
+   return $usb->getVersion();
+});
+$version = $maybeVersion->getOrElse("UNKNOWN");
+#+END_SRC
+
+** An Example, using Maybe, Second Attempt, Single Assignment
+#+BEGIN_SRC php
+$version = $computer->getSoundcard()
+                    ->flatMap(function ($soundcard) {
+                                 return $soundcard->getUSB();
+                              }
+                    )->map(function ($usb) {
+                              return $usb->getVersion();
+                           }
+                    )->getOrElse("UNKNOWN");
+#+END_SRC
+
+** An Example, In Haskell
+#+BEGIN_SRC haskell
+version = fromMaybe "UNKNOWN" (getSoundcard computer >>= getUSB >>= return . getVersion)
+#+END_SRC
+
+** Show a final PHP example using separately defined functions so it looks more like the Haskell version.
 
 
 * The Problem with Exceptions
