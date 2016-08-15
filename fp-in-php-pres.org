@@ -13,12 +13,15 @@
 ** Hoare's billion dollar mistake
 *** "I call it my billion-dollar mistake. It was the invention of the null reference in 1965."
 
+** Why is null so bad?
+*** It adds this extra value to every type but does not honor any of their contracts.
+
 ** You don't actually need the concept of null
 *** Some languages don't even have it:
 **** Haskell
 **** Rust
 **** ML-family languages
-**** Flow?
+**** Flow
 **** Other languages?
 
 ** So why do languages have it?
@@ -58,7 +61,7 @@ $version = $computer->getSoundcard()->getUSB()->getVersion();
 #+END_SRC
 
 ** An Example, Continued
-But not all computers have sound cards and not all soundcards have a USB controller and their absence is represented by returning null, so you'd have to write
+But not all computers have sound cards and not all soundcards have a USB controller and in this model their absence is represented by returning null, so you'd have to write
 
 #+BEGIN_SRC php
 $version = "UNKNOWN";
@@ -125,19 +128,36 @@ $version = $maybeVersion->getOrElse("UNKNOWN");
 $version = $computer->getSoundcard()
                     ->flatMap(function ($soundcard) {
                                  return $soundcard->getUSB();
-                              }
-                    )->map(function ($usb) {
+                              })
+                    ->map(function ($usb) {
                               return $usb->getVersion();
-                           }
-                    )->getOrElse("UNKNOWN");
+                          })
+                    ->getOrElse("UNKNOWN");
 #+END_SRC
 
 ** An Example, In Haskell
 #+BEGIN_SRC haskell
+import Data.Maybe
+
+data Computer = Computer { getSoundcard :: Maybe Soundcard }
+data Soundcard = Soundcard { getUSB :: Maybe USB }
+data USB = USB { getVersion :: String }
+
+computer = undefined :: Computer
+
 version = fromMaybe "UNKNOWN" (getSoundcard computer >>= getUSB >>= return . getVersion)
 #+END_SRC
 
-** Show a final PHP example using separately defined functions so it looks more like the Haskell version.
+** We can clean up the PHP by first defining the anonymous functions:
+#+BEGIN_SRC php
+$getUsb = function ($soundcard) { return $soundcard->getUSB(); }
+$getVersion = function ($usb) { return $usb->getVersion(); }
+
+$version = $computer->getSoundcard()
+                    ->flatMap($getUsb)
+                    ->map($getVersion)
+                    ->getOrElse("UNKNOWN");
+#+END_SRC
 
 
 * The Problem with Exceptions
