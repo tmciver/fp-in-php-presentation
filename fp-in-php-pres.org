@@ -190,6 +190,7 @@ $version = $computer->getSoundcard()
 #+END_SRC
 
 
+
 * The Problem with Exceptions
 
 ** Exceptions are a Problem Because . . .
@@ -197,17 +198,20 @@ $version = $computer->getSoundcard()
 - They are impure
 - They make functions/methods partial
 - Unchecked exceptions are not a part of a function's/method's contract
-- Exceptions Require a Lot of Boilerplate
+- Exception handling requires a lot of boilerplate
 - They are costly to handle
 - They can put data into a "bad" state
 - Exceptions are typically used for control flow
 
 
-* A Solution
+
+* A Solution to the Exception Problem
 
 ** Value-based Error Signaling
-- Return a value that signals an error
-- "Left" means error, "Right" success
+- Use a type that has two possible values: one that signals an error, the other success.
+- functional-php library uses "Either", a generic type with two possible values: "Left" and "Right", each of which can hold values of different types.
+  - "Left" means error and typically contains an error string
+  - "Right" means success and holds the value of interest (just like "Just"!)
 
 ** Class Hierarchy
 (show image of Either class hierarchy)
