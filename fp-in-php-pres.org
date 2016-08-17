@@ -218,3 +218,153 @@ $eitherFile = $eitherFile->flatMap(function ($file) use ($data) {
 #+BEGIN_SRC php
 $eitherDiv = divide(1, 0);
 #+END_SRC
+
+
+* Let Me Out!
+
+** So What Do I Do With This Maybe/Either?
+#+ATTR_REVEAL: :frag roll-in
+What if you have an Either but need to return an HTTP response? You could do something like:
+
+#+ATTR_REVEAL: :frag roll-inn
+#+BEGIN_SRC php
+public function someControllerMethod(...) {
+
+   $eitherData = $this->someObject->getSomeImportantData(...);
+
+   if ($eitherData->isLeft()) {
+      $response = response($eitherData->get(), 400);
+   } else {
+      $response = response($eitherData->get(), 200);
+   }
+
+   return $response;
+}
+#+END_SRC
+
+#+ATTR_REVEAL: :frag roll-in
+But this isn't very "OO".
+
+** You Could Add an Abstract Method to Either
+
+#+BEGIN_SRC php
+abstract class Either {
+
+   ...
+
+   abstract function toLaravelResponse();
+}
+
+class Left extends Either {
+
+   ...
+
+   function toLaravelResponse() {
+      return response($this->val, 400);
+   }
+}
+
+class Right extends Either {
+
+   ...
+
+   function toLaravelResponse() {
+      return response(someViewConversion($this->val), 200);
+   }
+}
+#+END_SRC
+
+** The OO Solution Is to Use the Visitor Pattern
+
+A visitor for Either looks like this:
+
+#+BEGIN_SRC php
+interface EitherVisitor {
+
+   function visitLeft($left);
+
+   function visitRight($right);
+}
+#+END_SRC
+
+** Implementation of Visitor Pattern for Either
+
+#+BEGIN_SRC php
+abstract class Either {
+
+   ...
+
+   abstract function accept($visitor);
+}
+
+class Left extends Either {
+
+   ...
+
+   function accept($visitor) {
+      return $visitor->visitLeft($this);
+   }
+}
+
+class Right extends Either {
+
+   ...
+
+   function accept($visitor) {
+      return $visitor->visitRight($this);
+   }
+}
+#+END_SRC
+
+** Conversion Example: Either to Laravel Response
+
+#+BEGIN_SRC php
+class EitherToLaravelResponse implements EitherVisitor {
+
+   private $someView;
+
+   function visitLeft($left) {
+      return response($left->get(), 400);
+   }
+
+   function visitRight($right) {
+      return response($this->someView($right->get()), 200);
+   }
+}
+
+// and use it like so
+$response = $eitherData->accept(new EitherToLaravelResponse());
+#+END_SRC
+
+** Conversion Example: Either to Maybe
+
+#+BEGIN_SRC php
+class EitherToMaybe implements EitherVisitor {
+
+   function visitLeft($left) {
+      return Maybe::nothing();
+   }
+
+   function visitRight($right) {
+      return Maybe::fromValue($right);
+   }
+}
+
+// and use it like so
+$maybeData = $eitherData->accept(new EitherToMaybe());
+#+END_SRC
+
+** Too Much Work!
+Sometimes it's just easier to abandon OO purity and do something like this:
+
+#+BEGIN_SRC php
+// convert Either to Laravel response
+$response = $eitherData->isLeft() ?
+            response($eitherData->get(), 400) :
+            response(someView($eitherData->get()), 200);
+
+// convert Either to Maybe
+$maybeData = $eitherData->isLeft() ?
+             Maybe::nothing() :
+             Maybe::fromValue($eitherData->get());
+#+END_SRC
