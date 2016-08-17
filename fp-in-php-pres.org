@@ -1,23 +1,29 @@
 #+TITLE: FP in PHP
 #+REVEAL_THEME: night
-#+OPTIONS: toc:1, num:nil
+#+OPTIONS: toc:1, num:nil, f:t
 #+REVEAL_ROOT: file:///home/tim/workspace/javascript/reveal.js
 
 * Null: Worst Language Feature Ever
 
 ** The Faces of Null
+- PHP: Fatal Error: Call to a member function [...] on a non-object
 - Java: java.lang.NullPointerException
+- C#: System.NullReferenceException: Object reference not set to an instance of an object.
 - Javascript:
   - "undefined is not a function."
   - "Cannot read property 'x' of null."
+- Python: AttributeError: 'NoneType' object has no attribute 'xxx'
 - Ruby: undefined method '...' for nil:NilClass
 - C/C++: segmentation fault
 
 ** Why is null so bad?
+- It's use makes for poor APIs
 - It adds this extra value to every type but does not honor any of their contracts.
 
+Null is the value that has no value.
+
 ** Hoare's Billion Dollar Mistake
-"I call it my billion-dollar mistake. It was the invention of the null reference in 1965. At that time, I was designing the first comprehensive type system for references in an object oriented language (ALGOL W). My goal was to ensure that all use of references should be absolutely safe, with checking performed automatically by the compiler. But I couldn't resist the temptation to put in a null reference, simply because it was so easy to implement. This has led to innumerable errors, vulnerabilities, and system crashes, which have probably caused a billion dollars of pain and damage in the last forty years."
+"I call it my billion-dollar mistake. It was the invention of the null reference in 1965. At that time, I was designing the first comprehensive type system for references in an object oriented language (ALGOL W). My goal was to ensure that all use of references should be absolutely safe, with checking performed automatically by the compiler. But I couldn't resist the temptation to put in a null reference, simply because it was so easy to implement. This has led to innumerable errors, vulnerabilities, and system crashes, which have probably caused a billion dollars of pain and damage in the last forty years."[fn:: https://en.wikipedia.org/wiki/Tony_Hoare#Apologies_and_retractions]
 
 -- Tony Hoare; ACM Turing Award recipient, inventor of quicksort and the null reference
 
@@ -37,12 +43,12 @@ Some languages don't even have it:
 
 * Is There an Alternative? Maybe
 
-** Solution 1: Pretend it doesn't exist ([[http://c2.com/cgi/wiki?NoNullBeyondMethodScope(((())))][Discussed here]])
-- Never return null. Never accept null as parameter.
+** Solution 1: Pretend it doesn't exist
+- Never return null. Never accept null as parameter.[fn:: http://c2.com/cgi/wiki?NoNullBeyondMethodScope]
 
 ** Solution 2: Use the [[https://en.wikipedia.org/wiki/Null_Object_pattern][Null Object pattern]]
 - Create a type that you can return instead of null that has some neutral behavior.
-- But it's not often applicable.
+- But it's often not applicable.
 
 ** Solution 3: Use an Option/Maybe type
 - Haskell has Maybe
@@ -50,9 +56,10 @@ Some languages don't even have it:
 - Scala has Option
 - C++ has an optional template class in a proposed extension
 - Swift has Optional
+- Ruby has [[https://github.com/rap1ds/ruby-possibly][Possibly]] (library)
 
 ** What is Option/Maybe?
-- It's a type with two possible values: Nothing and Just (or None and Some)
+It's a type with two possible values: Nothing and Just (or None and Some)
 - Nothing represents no value
 - Just contains a value
 
@@ -226,7 +233,7 @@ $eitherDiv = divide(1, 0);
 #+ATTR_REVEAL: :frag roll-in
 What if you have an Either but need to return an HTTP response? You could do something like:
 
-#+ATTR_REVEAL: :frag roll-inn
+#+ATTR_REVEAL: :frag roll-in
 #+BEGIN_SRC php
 public function someControllerMethod(...) {
 
