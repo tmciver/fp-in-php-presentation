@@ -1,55 +1,80 @@
 #+TITLE: FP in PHP
-#+OPTIONS: toc:1
+#+REVEAL_THEME: night
+#+OPTIONS: toc:1, num:nil
 #+REVEAL_ROOT: file:///home/tim/workspace/javascript/reveal.js
 
 * Null: Worst Language Feature Ever
 
 ** The Faces of Null
-*** Java: java.lang.NullPointerException
-*** Javascript: “undefined is not a function.” or "Cannot read property 'x' of null."
-*** Ruby: undefined method '...' for nil:NilClass
-*** C/C++: segmentation fault
-
-** Hoare's billion dollar mistake
-*** "I call it my billion-dollar mistake. It was the invention of the null reference in 1965."
+- Java: java.lang.NullPointerException
+- Javascript:
+  - "undefined is not a function."
+  - "Cannot read property 'x' of null."
+- Ruby: undefined method '...' for nil:NilClass
+- C/C++: segmentation fault
 
 ** Why is null so bad?
-*** It adds this extra value to every type but does not honor any of their contracts.
+- It adds this extra value to every type but does not honor any of their contracts.
+
+** Hoare's Billion Dollar Mistake
+"I call it my billion-dollar mistake. It was the invention of the null reference in 1965. At that time, I was designing the first comprehensive type system for references in an object oriented language (ALGOL W). My goal was to ensure that all use of references should be absolutely safe, with checking performed automatically by the compiler. But I couldn't resist the temptation to put in a null reference, simply because it was so easy to implement. This has led to innumerable errors, vulnerabilities, and system crashes, which have probably caused a billion dollars of pain and damage in the last forty years."
+
+-- Tony Hoare; ACM Turing Award recipient, inventor of quicksort and the null reference
 
 ** You don't actually need the concept of null
-*** Some languages don't even have it:
-**** Haskell
-**** Rust
-**** ML-family languages
-**** Flow
-**** Other languages?
+Some languages don't even have it:
+- Haskell
+- Rust
+- ML-family languages
+- Flow
+- Other languages?
 
 ** So why do languages have it?
-*** It's almost always used to represent the lack of a value.
-*** Sometimes you need to declare a variable before you can assign it a value.
+- It's almost always used to represent the lack of a value.
+- Sometimes you need to declare a variable before you can assign it a value.
 
 
 
-* An Alternative? Maybe
+* Is There an Alternative? Maybe
 
 ** Solution 1: Pretend it doesn't exist ([[http://c2.com/cgi/wiki?NoNullBeyondMethodScope(((())))][Discussed here]])
-*** Never return null. Never accept null as parameter.
+- Never return null. Never accept null as parameter.
 
 ** Solution 2: Use the [[https://en.wikipedia.org/wiki/Null_Object_pattern][Null Object pattern]]
-*** Create a type that you can return instead of null that has some neutral behavior.
-*** Not often applicable.
+- Create a type that you can return instead of null that has some neutral behavior.
+- But it's not often applicable.
 
 ** Solution 3: Use an Option/Maybe type
-*** Haskell has Maybe
-*** Java 8 has Optional
-*** Scala has had Option
-*** C++ has an optional template class in a proposed extension
-*** Swift has Optional
+- Haskell has Maybe
+- Java 8 has Optional
+- Scala has Option
+- C++ has an optional template class in a proposed extension
+- Swift has Optional
 
 ** What is Option/Maybe?
-*** It's a type with two possible values: Nothing and Just (or None and Some)
-*** Nothing represents no value
-*** Just contains a value
+- It's a type with two possible values: Nothing and Just (or None and Some)
+- Nothing represents no value
+- Just contains a value
+
+** In Haskell
+#+BEGIN_SRC haskell
+data Maybe a = Just a
+             | Nothing
+#+END_SRC
+
+** In OO
+But in an OO language you need to "simulate" it like so:
+#+BEGIN_SRC php
+abstract class Maybe {}
+
+class Just extends Maybe {
+   private $val;
+
+   public function __construct($val) { $this->val = $val; }
+}
+
+class Nothing extends Maybe {}
+#+END_SRC
 
 ** Class Hierarchy
 (show image of class hierarchy)
@@ -61,7 +86,7 @@ $version = $computer->getSoundcard()->getUSB()->getVersion();
 #+END_SRC
 
 ** An Example, Continued
-But not all computers have sound cards and not all soundcards have a USB controller and in this model their absence is represented by returning null, so you'd have to write
+But not all computers have soundcards and not all soundcards have a USB controller and in this model their absence is represented by returning null, so you'd have to write
 
 #+BEGIN_SRC php
 $version = "UNKNOWN";
@@ -77,7 +102,7 @@ if ($soundcard != null) {
 And now you're in "The Pyramid of Doom"!
 
 ** An Example, using Maybe, First Attempt
-Here we change the return type of getSoundcard() to be Maybe
+Here we change the return type of getSoundcard() and getUSB() to Maybe
 
 #+BEGIN_SRC php
 $version = "UNKNOWN";
@@ -137,8 +162,6 @@ $version = $computer->getSoundcard()
 
 ** An Example, In Haskell
 #+BEGIN_SRC haskell
-import Data.Maybe
-
 data Computer = Computer { getSoundcard :: Maybe Soundcard }
 data Soundcard = Soundcard { getUSB :: Maybe USB }
 data USB = USB { getVersion :: String }
