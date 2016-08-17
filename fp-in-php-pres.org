@@ -185,5 +185,36 @@ $version = $computer->getSoundcard()
 
 * The Problem with Exceptions
 
+** Exceptions are a Problem Because . . .
+- Throwing is a side effect
+- They are impure
+- They make functions/methods partial
+- Unchecked exceptions are not a part of a function's/method's contract
+- Exceptions Require a Lot of Boilerplate
+- They are costly to handle
+- They can put data into a "bad" state
+- Exceptions are typically used for control flow
 
-* Either Left or Right
+
+* A Solution
+
+** Value-based Error Signaling
+- Return a value that signals an error
+- "Left" means error, "Right" success
+
+** Class Hierarchy
+(show image of Either class hierarchy)
+
+** Example
+#+BEGIN_SRC php
+$data = 'A bit of data.';
+$eitherFile = open('/path/to/some/file.txt', 'rw');
+$eitherFile = $eitherFile->flatMap(function ($file) use ($data) {
+   return write($file, $data);
+})
+#+END_SRC
+
+** Another Example
+#+BEGIN_SRC php
+$eitherDiv = divide(1, 0);
+#+END_SRC
