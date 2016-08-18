@@ -231,6 +231,120 @@ $eitherDiv = divide(1, 0);
 #+END_SRC
 
 
+* Combining Maybe and Either
+
+** What If I Need Both?
+What if you have a function that can result in an error, but, if it doesn't, can have no value?
+
+You need something that is a sort of combination of Maybe and Either.
+
+** Just Do It!
+Either can hold any value so why not just stuff in a Maybe?
+
+#+BEGIN_SRC php
+function getUserEmailFromDatabase($userId) {
+   $sql = "select email from users where id = " . $userId;
+   $db_result = mysql_query($sql);
+   if (!$db_result) {
+      $either = Either::left('An error occurred when attempting to get email for user with ID: ' . $userId);
+   } else {
+      if (empty($db_result)) {
+         $maybe = Maybe::nothing();
+      } else {
+         $maybe = Maybe::fromValue($db_result);
+      }
+      $either = Either::right($maybe);
+   }
+
+   return $either;
+}
+
+
+$eitherMaybeEmail = getUserEmailFromDatabase(123);
+#+END_SRC
+
+** And Then . . .
+Then say you want to run a "regular" function on the result.  You might be inclined to do:
+
+#+BEGIN_SRC php
+$eitherMaybeEmail->map(function ($email) {
+   return strtoupper($email);
+});
+#+END_SRC
+
+#+ATTR_REVEAL: :frag roll-in
+But this doesn't work!  Do you know why?
+
+#+ATTR_REVEAL: :frag roll-in
+A: Because the anonymous function is being passed a Maybe, not the email string.
+
+** We Could Make It Work . . .
+
+. . . by passing in a different function.
+
+#+BEGIN_SRC php
+$eitherMaybeEmail->map(function ($maybeEmail) {
+   return $maybeEmail->map(function ($email) {
+      return strtoupper($email);
+   });
+});
+#+END_SRC
+
+#+ATTR_REVEAL: :frag roll-in
+But that's pretty cumbersome.
+
+** We Need a New Type: MaybeT
+
+#+BEGIN_SRC php
+class MaybeT {
+
+   private $monad;
+
+   ...
+
+   public function map(callable $f) {
+      return new MaybeT($this->monad->map(function ($maybe) use ($f) {
+         return $maybe->map($f);
+      }));
+   }
+}
+#+END_SRC
+
+** And Now . . .
+
+#+BEGIN_SRC php
+function getUserEmailFromDatabase($userId) {
+   $sql = "select email from users where id = " . $userId;
+   $db_result = mysql_query($sql);
+   if (!$db_result) {
+      $either = Either::left('An error occurred when attempting to get email for user with ID: ' . $userId);
+   } else {
+      if (empty($db_result)) {
+         $maybe = Maybe::nothing();
+      } else {
+         $maybe = Maybe::fromValue($db_result);
+      }
+      $either = Either::right($maybe);
+   }
+
+   return new MaybeT($either);
+}
+
+
+$maybeTEmail = getUserEmailFromDatabase(123);
+#+END_SRC
+
+** Finally . . .
+We can just do:
+
+#+BEGIN_SRC php
+$maybeTEmail->map(function ($email) {
+   return strtoupper($email);
+});
+#+END_SRC
+
+
+
 * Let Me Out!
 
 ** So What Do I Do With This Maybe/Either?
