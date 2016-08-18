@@ -179,6 +179,69 @@ $version = $computer->getSoundcard()
                     ->getOrElse("UNKNOWN");
 #+END_SRC
 
+** Maybe =map= Implementation
+#+BEGIN_SRC php
+class Just extends Maybe {
+
+   ...
+
+   public function map(callable $f) {
+	// Since we don't know if $f will throw an exception, we wrap the call
+	// in a try/catch. The result wiil be Nothing if there's an exception.
+	try {
+	    $maybeResult = Maybe::fromValue($f($this->val));
+	} catch (\Exception $e) {
+	    $maybeResult = Maybe::nothing();
+	}
+
+	return $maybeResult;
+   }
+}
+
+class Nothing extends Maybe {
+
+   ...
+
+   public function map(Callable $f) {
+	return $this;
+   }
+}
+#+END_SRC
+
+** Maybe =flatMap= Implementation
+#+BEGIN_SRC php
+class Just extends Maybe {
+
+   ...
+
+   public function flatMap(callable $f) {
+	// Since we don't know if $f will throw an exception, we wrap the call
+	// in a try/catch. The result wiil be Nothing if there's an exception.
+	try {
+	    $maybeResult = $f($this->val);
+	    // If the result is null, we return Nothing.
+	    if (is_null($maybeResult)) {
+		$maybeResult = Maybe::nothing();
+	    }
+	} catch (\Exception $e) {
+	    $maybeResult = Maybe::nothing();
+	}
+
+	return $maybeResult;
+   }
+}
+
+class Nothing extends Maybe {
+
+   ...
+
+   public function flatMap(Callable $f) {
+	return $this;
+   }
+}
+#+END_SRC
+
+
 
 
 * The Problem with Exceptions
