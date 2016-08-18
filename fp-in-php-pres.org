@@ -493,3 +493,9 @@ $maybeData = $eitherData->isLeft() ?
              Maybe::nothing() :
              Maybe::fromValue($eitherData->get());
 #+END_SRC
+
+* Summary
+- Null is bad and should be avoided. Use Maybe instead.
+- Exceptions are bad and should be avoided.  Use Either instead.
+- You can combine them; it's called MaybeT.
+- You can convert them to other things using the Visitor Pattern.
