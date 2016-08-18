@@ -55,7 +55,6 @@ Some languages don't even have it:
 - Java 8 has Optional
 - Scala has Option
 - C++ has an optional template class in a proposed extension
-- Swift has Optional
 - Ruby has [[https://github.com/rap1ds/ruby-possibly][Possibly]] (library)
 
 ** What is Option/Maybe?
@@ -106,6 +105,7 @@ if ($soundcard != null) {
 }
 #+END_SRC
 
+#+ATTR_REVEAL: :frag roll-in
 And now you're in "The Pyramid of Doom"!
 
 ** An Example, using Maybe, First Attempt
@@ -124,10 +124,11 @@ if (!$maybeSoundcard->isNothing()) {
 }
 #+END_SRC
 
+#+ATTR_REVEAL: :frag roll-in
 But this is worse than before!
 
 ** An Example, using Maybe, Second Attempt
-Use `map` and `flatMap` instead:
+Use =map= and =flatMap= instead:
 
 #+BEGIN_SRC php
 $version = "UNKNOWN";
@@ -165,17 +166,6 @@ $version = $computer->getSoundcard()
                               return $usb->getVersion();
                           })
                     ->getOrElse("UNKNOWN");
-#+END_SRC
-
-** An Example, In Haskell
-#+BEGIN_SRC haskell
-data Computer = Computer { getSoundcard :: Maybe Soundcard }
-data Soundcard = Soundcard { getUSB :: Maybe USB }
-data USB = USB { getVersion :: String }
-
-computer = undefined :: Computer
-
-version = fromMaybe "UNKNOWN" (getSoundcard computer >>= getUSB >>= return . getVersion)
 #+END_SRC
 
 ** We can clean up the PHP by first defining the anonymous functions:
@@ -231,7 +221,7 @@ $eitherDiv = divide(1, 0);
 #+END_SRC
 
 
-* Combining Maybe and Either
+* Avoiding Null and Exceptions at the Same Time
 
 ** What If I Need Both?
 What if you have a function that can result in an error, but, if it doesn't, can have no value?
@@ -499,3 +489,16 @@ $maybeData = $eitherData->isLeft() ?
 - Exceptions are bad and should be avoided.  Use Either instead.
 - You can combine them; it's called MaybeT.
 - You can convert them to other things using the Visitor Pattern.
+
+** Questions?
+
+** An Example, In Haskell
+#+BEGIN_SRC haskell
+data Computer = Computer { getSoundcard :: Maybe Soundcard }
+data Soundcard = Soundcard { getUSB :: Maybe USB }
+data USB = USB { getVersion :: String }
+
+computer = undefined :: Computer
+
+version = fromMaybe "UNKNOWN" (getSoundcard computer >>= getUSB >>= return . getVersion)
+#+END_SRC
